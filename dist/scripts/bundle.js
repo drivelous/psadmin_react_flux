@@ -9322,7 +9322,7 @@ return jQuery;
   var undefined;
 
   /** Used as the semantic version number. */
-  var VERSION = '4.12.0';
+  var VERSION = '4.13.1';
 
   /** Used as the size to enable large array optimizations. */
   var LARGE_ARRAY_SIZE = 200;
@@ -9426,7 +9426,7 @@ return jQuery;
   /** Used to match property names within property paths. */
   var reIsDeepProp = /\.|\[(?:[^[\]]*|(["'])(?:(?!\1)[^\\]|\\.)*?\1)\]/,
       reIsPlainProp = /^\w*$/,
-      rePropName = /[^.[\]]+|\[(?:(-?\d+(?:\.\d+)?)|(["'])((?:(?!\2)[^\\]|\\.)*?)\2)\]/g;
+      rePropName = /[^.[\]]+|\[(?:(-?\d+(?:\.\d+)?)|(["'])((?:(?!\2)[^\\]|\\.)*?)\2)\]|(?=(\.|\[\])(?:\4|$))/g;
 
   /**
    * Used to match `RegExp`
@@ -9559,7 +9559,7 @@ return jQuery;
     'Function', 'Int8Array', 'Int16Array', 'Int32Array', 'Map', 'Math', 'Object',
     'Promise', 'Reflect', 'RegExp', 'Set', 'String', 'Symbol', 'TypeError',
     'Uint8Array', 'Uint8ClampedArray', 'Uint16Array', 'Uint32Array', 'WeakMap',
-    '_', 'clearTimeout', 'isFinite', 'parseInt', 'setTimeout'
+    '_', 'isFinite', 'parseInt', 'setTimeout'
   ];
 
   /** Used to make template sourceURLs easier to identify. */
@@ -9638,12 +9638,6 @@ return jQuery;
     '&#96;': '`'
   };
 
-  /** Used to determine if values are of the language type `Object`. */
-  var objectTypes = {
-    'function': true,
-    'object': true
-  };
-
   /** Used to escape characters for inclusion in compiled string literals. */
   var stringEscapes = {
     '\\': '\\',
@@ -9659,41 +9653,25 @@ return jQuery;
       freeParseInt = parseInt;
 
   /** Detect free variable `exports`. */
-  var freeExports = (objectTypes[typeof exports] && exports && !exports.nodeType)
-    ? exports
-    : undefined;
+  var freeExports = typeof exports == 'object' && exports;
 
   /** Detect free variable `module`. */
-  var freeModule = (objectTypes[typeof module] && module && !module.nodeType)
-    ? module
-    : undefined;
+  var freeModule = freeExports && typeof module == 'object' && module;
 
   /** Detect the popular CommonJS extension `module.exports`. */
-  var moduleExports = (freeModule && freeModule.exports === freeExports)
-    ? freeExports
-    : undefined;
+  var moduleExports = freeModule && freeModule.exports === freeExports;
 
   /** Detect free variable `global` from Node.js. */
-  var freeGlobal = checkGlobal(freeExports && freeModule && typeof global == 'object' && global);
+  var freeGlobal = checkGlobal(typeof global == 'object' && global);
 
   /** Detect free variable `self`. */
-  var freeSelf = checkGlobal(objectTypes[typeof self] && self);
-
-  /** Detect free variable `window`. */
-  var freeWindow = checkGlobal(objectTypes[typeof window] && window);
+  var freeSelf = checkGlobal(typeof self == 'object' && self);
 
   /** Detect `this` as the global object. */
-  var thisGlobal = checkGlobal(objectTypes[typeof this] && this);
+  var thisGlobal = checkGlobal(typeof this == 'object' && this);
 
-  /**
-   * Used as a reference to the global object.
-   *
-   * The `this` value is used if it's the global object to avoid Greasemonkey's
-   * restricted `window` object, otherwise the `window` object is used.
-   */
-  var root = freeGlobal ||
-    ((freeWindow !== (thisGlobal && thisGlobal.window)) && freeWindow) ||
-      freeSelf || thisGlobal || Function('return this')();
+  /** Used as a reference to the global object. */
+  var root = freeGlobal || freeSelf || thisGlobal || Function('return this')();
 
   /*--------------------------------------------------------------------------*/
 
@@ -9749,7 +9727,7 @@ return jQuery;
    * A specialized version of `baseAggregator` for arrays.
    *
    * @private
-   * @param {Array} array The array to iterate over.
+   * @param {Array} [array] The array to iterate over.
    * @param {Function} setter The function to set `accumulator` values.
    * @param {Function} iteratee The iteratee to transform keys.
    * @param {Object} accumulator The initial aggregated object.
@@ -9757,7 +9735,7 @@ return jQuery;
    */
   function arrayAggregator(array, setter, iteratee, accumulator) {
     var index = -1,
-        length = array.length;
+        length = array ? array.length : 0;
 
     while (++index < length) {
       var value = array[index];
@@ -9771,13 +9749,13 @@ return jQuery;
    * iteratee shorthands.
    *
    * @private
-   * @param {Array} array The array to iterate over.
+   * @param {Array} [array] The array to iterate over.
    * @param {Function} iteratee The function invoked per iteration.
    * @returns {Array} Returns `array`.
    */
   function arrayEach(array, iteratee) {
     var index = -1,
-        length = array.length;
+        length = array ? array.length : 0;
 
     while (++index < length) {
       if (iteratee(array[index], index, array) === false) {
@@ -9792,12 +9770,12 @@ return jQuery;
    * iteratee shorthands.
    *
    * @private
-   * @param {Array} array The array to iterate over.
+   * @param {Array} [array] The array to iterate over.
    * @param {Function} iteratee The function invoked per iteration.
    * @returns {Array} Returns `array`.
    */
   function arrayEachRight(array, iteratee) {
-    var length = array.length;
+    var length = array ? array.length : 0;
 
     while (length--) {
       if (iteratee(array[length], length, array) === false) {
@@ -9812,14 +9790,14 @@ return jQuery;
    * iteratee shorthands.
    *
    * @private
-   * @param {Array} array The array to iterate over.
+   * @param {Array} [array] The array to iterate over.
    * @param {Function} predicate The function invoked per iteration.
    * @returns {boolean} Returns `true` if all elements pass the predicate check,
    *  else `false`.
    */
   function arrayEvery(array, predicate) {
     var index = -1,
-        length = array.length;
+        length = array ? array.length : 0;
 
     while (++index < length) {
       if (!predicate(array[index], index, array)) {
@@ -9834,13 +9812,13 @@ return jQuery;
    * iteratee shorthands.
    *
    * @private
-   * @param {Array} array The array to iterate over.
+   * @param {Array} [array] The array to iterate over.
    * @param {Function} predicate The function invoked per iteration.
    * @returns {Array} Returns the new filtered array.
    */
   function arrayFilter(array, predicate) {
     var index = -1,
-        length = array.length,
+        length = array ? array.length : 0,
         resIndex = 0,
         result = [];
 
@@ -9858,26 +9836,27 @@ return jQuery;
    * specifying an index to search from.
    *
    * @private
-   * @param {Array} array The array to search.
+   * @param {Array} [array] The array to search.
    * @param {*} target The value to search for.
    * @returns {boolean} Returns `true` if `target` is found, else `false`.
    */
   function arrayIncludes(array, value) {
-    return !!array.length && baseIndexOf(array, value, 0) > -1;
+    var length = array ? array.length : 0;
+    return !!length && baseIndexOf(array, value, 0) > -1;
   }
 
   /**
    * This function is like `arrayIncludes` except that it accepts a comparator.
    *
    * @private
-   * @param {Array} array The array to search.
+   * @param {Array} [array] The array to search.
    * @param {*} target The value to search for.
    * @param {Function} comparator The comparator invoked per element.
    * @returns {boolean} Returns `true` if `target` is found, else `false`.
    */
   function arrayIncludesWith(array, value, comparator) {
     var index = -1,
-        length = array.length;
+        length = array ? array.length : 0;
 
     while (++index < length) {
       if (comparator(value, array[index])) {
@@ -9892,13 +9871,13 @@ return jQuery;
    * shorthands.
    *
    * @private
-   * @param {Array} array The array to iterate over.
+   * @param {Array} [array] The array to iterate over.
    * @param {Function} iteratee The function invoked per iteration.
    * @returns {Array} Returns the new mapped array.
    */
   function arrayMap(array, iteratee) {
     var index = -1,
-        length = array.length,
+        length = array ? array.length : 0,
         result = Array(length);
 
     while (++index < length) {
@@ -9931,7 +9910,7 @@ return jQuery;
    * iteratee shorthands.
    *
    * @private
-   * @param {Array} array The array to iterate over.
+   * @param {Array} [array] The array to iterate over.
    * @param {Function} iteratee The function invoked per iteration.
    * @param {*} [accumulator] The initial value.
    * @param {boolean} [initAccum] Specify using the first element of `array` as
@@ -9940,7 +9919,7 @@ return jQuery;
    */
   function arrayReduce(array, iteratee, accumulator, initAccum) {
     var index = -1,
-        length = array.length;
+        length = array ? array.length : 0;
 
     if (initAccum && length) {
       accumulator = array[++index];
@@ -9956,7 +9935,7 @@ return jQuery;
    * iteratee shorthands.
    *
    * @private
-   * @param {Array} array The array to iterate over.
+   * @param {Array} [array] The array to iterate over.
    * @param {Function} iteratee The function invoked per iteration.
    * @param {*} [accumulator] The initial value.
    * @param {boolean} [initAccum] Specify using the last element of `array` as
@@ -9964,7 +9943,7 @@ return jQuery;
    * @returns {*} Returns the accumulated value.
    */
   function arrayReduceRight(array, iteratee, accumulator, initAccum) {
-    var length = array.length;
+    var length = array ? array.length : 0;
     if (initAccum && length) {
       accumulator = array[--length];
     }
@@ -9979,14 +9958,14 @@ return jQuery;
    * shorthands.
    *
    * @private
-   * @param {Array} array The array to iterate over.
+   * @param {Array} [array] The array to iterate over.
    * @param {Function} predicate The function invoked per iteration.
    * @returns {boolean} Returns `true` if any element passes the predicate check,
    *  else `false`.
    */
   function arraySome(array, predicate) {
     var index = -1,
-        length = array.length;
+        length = array ? array.length : 0;
 
     while (++index < length) {
       if (predicate(array[index], index, array)) {
@@ -9997,23 +9976,21 @@ return jQuery;
   }
 
   /**
-   * The base implementation of methods like `_.find` and `_.findKey`, without
-   * support for iteratee shorthands, which iterates over `collection` using
-   * `eachFunc`.
+   * The base implementation of methods like `_.findKey` and `_.findLastKey`,
+   * without support for iteratee shorthands, which iterates over `collection`
+   * using `eachFunc`.
    *
    * @private
    * @param {Array|Object} collection The collection to search.
    * @param {Function} predicate The function invoked per iteration.
    * @param {Function} eachFunc The function to iterate over `collection`.
-   * @param {boolean} [retKey] Specify returning the key of the found element
-   *  instead of the element itself.
    * @returns {*} Returns the found element or its key, else `undefined`.
    */
-  function baseFind(collection, predicate, eachFunc, retKey) {
+  function baseFindKey(collection, predicate, eachFunc) {
     var result;
     eachFunc(collection, function(value, key, collection) {
       if (predicate(value, key, collection)) {
-        result = retKey ? key : value;
+        result = key;
         return false;
       }
     });
@@ -10027,12 +10004,13 @@ return jQuery;
    * @private
    * @param {Array} array The array to search.
    * @param {Function} predicate The function invoked per iteration.
+   * @param {number} fromIndex The index to search from.
    * @param {boolean} [fromRight] Specify iterating from right to left.
    * @returns {number} Returns the index of the matched value, else `-1`.
    */
-  function baseFindIndex(array, predicate, fromRight) {
+  function baseFindIndex(array, predicate, fromIndex, fromRight) {
     var length = array.length,
-        index = fromRight ? length : -1;
+        index = fromIndex + (fromRight ? 1 : -1);
 
     while ((fromRight ? index-- : ++index < length)) {
       if (predicate(array[index], index, array)) {
@@ -10340,6 +10318,18 @@ return jQuery;
   }
 
   /**
+   * Gets the value at `key` of `object`.
+   *
+   * @private
+   * @param {Object} [object] The object to query.
+   * @param {string} key The key of the property to get.
+   * @returns {*} Returns the property value.
+   */
+  function getValue(object, key) {
+    return object == null ? undefined : object[key];
+  }
+
+  /**
    * Gets the index at which the first occurrence of `NaN` is found in `array`.
    *
    * @private
@@ -10350,7 +10340,7 @@ return jQuery;
    */
   function indexOfNaN(array, fromIndex, fromRight) {
     var length = array.length,
-        index = fromIndex + (fromRight ? 0 : -1);
+        index = fromIndex + (fromRight ? 1 : -1);
 
     while ((fromRight ? index-- : ++index < length)) {
       var other = array[index];
@@ -10541,10 +10531,10 @@ return jQuery;
    * lodash.isFunction(lodash.bar);
    * // => true
    *
-   * // Use `context` to mock `Date#getTime` use in `_.now`.
-   * var mock = _.runInContext({
+   * // Use `context` to stub `Date#getTime` use in `_.now`.
+   * var stubbed = _.runInContext({
    *   'Date': function() {
-   *     return { 'getTime': getTimeMock };
+   *     return { 'getTime': stubGetTime };
    *   }
    * });
    *
@@ -10565,6 +10555,15 @@ return jQuery;
     var arrayProto = context.Array.prototype,
         objectProto = context.Object.prototype,
         stringProto = context.String.prototype;
+
+    /** Used to detect overreaching core-js shims. */
+    var coreJsData = context['__core-js_shared__'];
+
+    /** Used to detect methods masquerading as native. */
+    var maskSrcKey = (function() {
+      var uid = /[^.]+$/.exec(coreJsData && coreJsData.keys && coreJsData.keys.IE_PROTO || '');
+      return uid ? ('Symbol(src)_1.' + uid) : '';
+    }());
 
     /** Used to resolve the decompiled source of functions. */
     var funcToString = context.Function.prototype.toString;
@@ -10599,14 +10598,15 @@ return jQuery;
         Reflect = context.Reflect,
         Symbol = context.Symbol,
         Uint8Array = context.Uint8Array,
-        clearTimeout = context.clearTimeout,
         enumerate = Reflect ? Reflect.enumerate : undefined,
         getOwnPropertySymbols = Object.getOwnPropertySymbols,
         iteratorSymbol = typeof (iteratorSymbol = Symbol && Symbol.iterator) == 'symbol' ? iteratorSymbol : undefined,
         objectCreate = Object.create,
         propertyIsEnumerable = objectProto.propertyIsEnumerable,
-        setTimeout = context.setTimeout,
         splice = arrayProto.splice;
+
+    /** Built-in method references that are mockable. */
+    var setTimeout = function(func, wait) { return context.setTimeout.call(root, func, wait); };
 
     /* Built-in method references for those with the same name as other `lodash` methods. */
     var nativeCeil = Math.ceil,
@@ -10729,19 +10729,21 @@ return jQuery;
      * `isArrayBuffer`, `isArrayLike`, `isArrayLikeObject`, `isBoolean`,
      * `isBuffer`, `isDate`, `isElement`, `isEmpty`, `isEqual`, `isEqualWith`,
      * `isError`, `isFinite`, `isFunction`, `isInteger`, `isLength`, `isMap`,
-     * `isMatch`, `isMatchWith`, `isNaN`, `isNative`, `isNil`, `isNull`, `isNumber`,
-     * `isObject`, `isObjectLike`, `isPlainObject`, `isRegExp`, `isSafeInteger`,
-     * `isSet`, `isString`, `isUndefined`, `isTypedArray`, `isWeakMap`, `isWeakSet`,
-     * `join`, `kebabCase`, `last`, `lastIndexOf`, `lowerCase`, `lowerFirst`,
-     * `lt`, `lte`, `max`, `maxBy`, `mean`, `meanBy`, `min`, `minBy`, `multiply`,
-     * `noConflict`, `noop`, `now`, `nth`, `pad`, `padEnd`, `padStart`, `parseInt`,
-     * `pop`, `random`, `reduce`, `reduceRight`, `repeat`, `result`, `round`,
-     * `runInContext`, `sample`, `shift`, `size`, `snakeCase`, `some`, `sortedIndex`,
-     * `sortedIndexBy`, `sortedLastIndex`, `sortedLastIndexBy`, `startCase`,
-     * `startsWith`, `subtract`, `sum`, `sumBy`, `template`, `times`, `toFinite`,
-     * `toInteger`, `toJSON`, `toLength`, `toLower`, `toNumber`, `toSafeInteger`,
-     * `toString`, `toUpper`, `trim`, `trimEnd`, `trimStart`, `truncate`, `unescape`,
-     * `uniqueId`, `upperCase`, `upperFirst`, `value`, and `words`
+     * `isMatch`, `isMatchWith`, `isNaN`, `isNative`, `isNil`, `isNull`,
+     * `isNumber`, `isObject`, `isObjectLike`, `isPlainObject`, `isRegExp`,
+     * `isSafeInteger`, `isSet`, `isString`, `isUndefined`, `isTypedArray`,
+     * `isWeakMap`, `isWeakSet`, `join`, `kebabCase`, `last`, `lastIndexOf`,
+     * `lowerCase`, `lowerFirst`, `lt`, `lte`, `max`, `maxBy`, `mean`, `meanBy`,
+     * `min`, `minBy`, `multiply`, `noConflict`, `noop`, `now`, `nth`, `pad`,
+     * `padEnd`, `padStart`, `parseInt`, `pop`, `random`, `reduce`, `reduceRight`,
+     * `repeat`, `result`, `round`, `runInContext`, `sample`, `shift`, `size`,
+     * `snakeCase`, `some`, `sortedIndex`, `sortedIndexBy`, `sortedLastIndex`,
+     * `sortedLastIndexBy`, `startCase`, `startsWith`, `stubArray`, `stubFalse`,
+     * `stubObject`, `stubString`, `stubTrue`, `subtract`, `sum`, `sumBy`,
+     * `template`, `times`, `toFinite`, `toInteger`, `toJSON`, `toLength`,
+     * `toLower`, `toNumber`, `toSafeInteger`, `toString`, `toUpper`, `trim`,
+     * `trimEnd`, `trimStart`, `truncate`, `unescape`, `uniqueId`, `upperCase`,
+     * `upperFirst`, `value`, and `words`
      *
      * @name _
      * @constructor
@@ -12042,7 +12044,7 @@ return jQuery;
      * The base implementation of `_.has` without support for deep paths.
      *
      * @private
-     * @param {Object} object The object to query.
+     * @param {Object} [object] The object to query.
      * @param {Array|string} key The key to check.
      * @returns {boolean} Returns `true` if `key` exists, else `false`.
      */
@@ -12050,20 +12052,21 @@ return jQuery;
       // Avoid a bug in IE 10-11 where objects with a [[Prototype]] of `null`,
       // that are composed entirely of index properties, return `false` for
       // `hasOwnProperty` checks of them.
-      return hasOwnProperty.call(object, key) ||
-        (typeof object == 'object' && key in object && getPrototype(object) === null);
+      return object != null &&
+        (hasOwnProperty.call(object, key) ||
+          (typeof object == 'object' && key in object && getPrototype(object) === null));
     }
 
     /**
      * The base implementation of `_.hasIn` without support for deep paths.
      *
      * @private
-     * @param {Object} object The object to query.
+     * @param {Object} [object] The object to query.
      * @param {Array|string} key The key to check.
      * @returns {boolean} Returns `true` if `key` exists, else `false`.
      */
     function baseHasIn(object, key) {
-      return key in Object(object);
+      return object != null && key in Object(object);
     }
 
     /**
@@ -12315,6 +12318,22 @@ return jQuery;
         }
       }
       return true;
+    }
+
+    /**
+     * The base implementation of `_.isNative` without bad shim checks.
+     *
+     * @private
+     * @param {*} value The value to check.
+     * @returns {boolean} Returns `true` if `value` is a native function,
+     *  else `false`.
+     */
+    function baseIsNative(value) {
+      if (!isObject(value) || isMasked(value)) {
+        return false;
+      }
+      var pattern = (isFunction(value) || isHostObject(value)) ? reIsNative : reIsHostCtor;
+      return pattern.test(toSource(value));
     }
 
     /**
@@ -12685,6 +12704,9 @@ return jQuery;
           length = values.length,
           seen = array;
 
+      if (array === values) {
+        values = copyArray(values);
+      }
       if (iteratee) {
         seen = arrayMap(array, baseUnary(iteratee));
       }
@@ -13838,6 +13860,31 @@ return jQuery;
     }
 
     /**
+     * Creates a `_.find` or `_.findLast` function.
+     *
+     * @private
+     * @param {Function} findIndexFunc The function to find the collection index.
+     * @returns {Function} Returns the new find function.
+     */
+    function createFind(findIndexFunc) {
+      return function(collection, predicate, fromIndex) {
+        var iterable = Object(collection);
+        predicate = getIteratee(predicate, 3);
+        if (!isArrayLike(collection)) {
+          var props = keys(collection);
+        }
+        var index = findIndexFunc(props || collection, function(value, key) {
+          if (props) {
+            key = value;
+            value = iterable[key];
+          }
+          return predicate(value, key, iterable);
+        }, fromIndex);
+        return index > -1 ? collection[props ? props[index] : index] : undefined;
+      };
+    }
+
+    /**
      * Creates a `_.flow` or `_.flowRight` function.
      *
      * @private
@@ -14200,7 +14247,7 @@ return jQuery;
       var func = Math[methodName];
       return function(number, precision) {
         number = toNumber(number);
-        precision = toInteger(precision);
+        precision = nativeMin(toInteger(precision), 292);
         if (precision) {
           // Shift with exponential notation to avoid floating-point issues.
           // See [MDN](https://mdn.io/round#Examples) for more details.
@@ -14681,11 +14728,14 @@ return jQuery;
      * @returns {Array} Returns the match data of `object`.
      */
     function getMatchData(object) {
-      var result = toPairs(object),
+      var result = keys(object),
           length = result.length;
 
       while (length--) {
-        result[length][2] = isStrictComparable(result[length][1]);
+        var key = result[length],
+            value = object[key];
+
+        result[length] = [key, value, isStrictComparable(value)];
       }
       return result;
     }
@@ -14699,8 +14749,8 @@ return jQuery;
      * @returns {*} Returns the function if it's native, else `undefined`.
      */
     function getNative(object, key) {
-      var value = object[key];
-      return isNative(value) ? value : undefined;
+      var value = getValue(object, key);
+      return baseIsNative(value) ? value : undefined;
     }
 
     /**
@@ -14729,9 +14779,7 @@ return jQuery;
 
     // Fallback for IE < 11.
     if (!getOwnPropertySymbols) {
-      getSymbols = function() {
-        return [];
-      };
+      getSymbols = stubArray;
     }
 
     /**
@@ -15062,6 +15110,26 @@ return jQuery;
       var data = getData(other);
       return !!data && func === data[0];
     }
+
+    /**
+     * Checks if `func` has its source masked.
+     *
+     * @private
+     * @param {Function} func The function to check.
+     * @returns {boolean} Returns `true` if `func` is masked, else `false`.
+     */
+    function isMasked(func) {
+      return !!maskSrcKey && (maskSrcKey in func);
+    }
+
+    /**
+     * Checks if `func` is capable of being masked.
+     *
+     * @private
+     * @param {*} value The value to check.
+     * @returns {boolean} Returns `true` if `func` is maskable, else `false`.
+     */
+    var isMaskable = coreJsData ? isFunction : stubFalse;
 
     /**
      * Checks if `value` is likely a prototype object.
@@ -15459,8 +15527,8 @@ return jQuery;
      * @see _.without, _.xor
      * @example
      *
-     * _.difference([3, 2, 1], [4, 2]);
-     * // => [3, 1]
+     * _.difference([2, 1], [2, 3]);
+     * // => [1]
      */
     var difference = rest(function(array, values) {
       return isArrayLikeObject(array)
@@ -15485,8 +15553,8 @@ return jQuery;
      * @returns {Array} Returns the new array of filtered values.
      * @example
      *
-     * _.differenceBy([3.1, 2.2, 1.3], [4.4, 2.5], Math.floor);
-     * // => [3.1, 1.3]
+     * _.differenceBy([2.1, 1.2], [2.3, 3.4], Math.floor);
+     * // => [1.2]
      *
      * // The `_.property` iteratee shorthand.
      * _.differenceBy([{ 'x': 2 }, { 'x': 1 }], [{ 'x': 1 }], 'x');
@@ -15738,6 +15806,7 @@ return jQuery;
      * @param {Array} array The array to search.
      * @param {Array|Function|Object|string} [predicate=_.identity]
      *  The function invoked per iteration.
+     * @param {number} [fromIndex=0] The index to search from.
      * @returns {number} Returns the index of the found element, else `-1`.
      * @example
      *
@@ -15762,10 +15831,16 @@ return jQuery;
      * _.findIndex(users, 'active');
      * // => 2
      */
-    function findIndex(array, predicate) {
-      return (array && array.length)
-        ? baseFindIndex(array, getIteratee(predicate, 3))
-        : -1;
+    function findIndex(array, predicate, fromIndex) {
+      var length = array ? array.length : 0;
+      if (!length) {
+        return -1;
+      }
+      var index = fromIndex == null ? 0 : toInteger(fromIndex);
+      if (index < 0) {
+        index = nativeMax(length + index, 0);
+      }
+      return baseFindIndex(array, getIteratee(predicate, 3), index);
     }
 
     /**
@@ -15779,6 +15854,7 @@ return jQuery;
      * @param {Array} array The array to search.
      * @param {Array|Function|Object|string} [predicate=_.identity]
      *  The function invoked per iteration.
+     * @param {number} [fromIndex=array.length-1] The index to search from.
      * @returns {number} Returns the index of the found element, else `-1`.
      * @example
      *
@@ -15803,10 +15879,19 @@ return jQuery;
      * _.findLastIndex(users, 'active');
      * // => 0
      */
-    function findLastIndex(array, predicate) {
-      return (array && array.length)
-        ? baseFindIndex(array, getIteratee(predicate, 3), true)
-        : -1;
+    function findLastIndex(array, predicate, fromIndex) {
+      var length = array ? array.length : 0;
+      if (!length) {
+        return -1;
+      }
+      var index = length - 1;
+      if (fromIndex !== undefined) {
+        index = toInteger(fromIndex);
+        index = fromIndex < 0
+          ? nativeMax(length + index, 0)
+          : nativeMin(index, length - 1);
+      }
+      return baseFindIndex(array, getIteratee(predicate, 3), index, true);
     }
 
     /**
@@ -15953,11 +16038,11 @@ return jQuery;
       if (!length) {
         return -1;
       }
-      fromIndex = toInteger(fromIndex);
-      if (fromIndex < 0) {
-        fromIndex = nativeMax(length + fromIndex, 0);
+      var index = fromIndex == null ? 0 : toInteger(fromIndex);
+      if (index < 0) {
+        index = nativeMax(length + index, 0);
       }
-      return baseIndexOf(array, value, fromIndex);
+      return baseIndexOf(array, value, index);
     }
 
     /**
@@ -15992,7 +16077,7 @@ return jQuery;
      * @returns {Array} Returns the new array of intersecting values.
      * @example
      *
-     * _.intersection([2, 1], [4, 2], [1, 2]);
+     * _.intersection([2, 1], [2, 3]);
      * // => [2]
      */
     var intersection = rest(function(arrays) {
@@ -16018,7 +16103,7 @@ return jQuery;
      * @returns {Array} Returns the new array of intersecting values.
      * @example
      *
-     * _.intersectionBy([2.1, 1.2], [4.3, 2.4], Math.floor);
+     * _.intersectionBy([2.1, 1.2], [2.3, 3.4], Math.floor);
      * // => [2.1]
      *
      * // The `_.property` iteratee shorthand.
@@ -16148,7 +16233,7 @@ return jQuery;
         ) + 1;
       }
       if (value !== value) {
-        return indexOfNaN(array, index, true);
+        return indexOfNaN(array, index - 1, true);
       }
       while (index--) {
         if (array[index] === value) {
@@ -16159,7 +16244,7 @@ return jQuery;
     }
 
     /**
-     * Gets the element at `n` index of `array`. If `n` is negative, the nth
+     * Gets the element at index `n` of `array`. If `n` is negative, the nth
      * element from the end is returned.
      *
      * @static
@@ -16200,11 +16285,11 @@ return jQuery;
      * @returns {Array} Returns `array`.
      * @example
      *
-     * var array = [1, 2, 3, 1, 2, 3];
+     * var array = ['a', 'b', 'c', 'a', 'b', 'c'];
      *
-     * _.pull(array, 2, 3);
+     * _.pull(array, 'a', 'c');
      * console.log(array);
-     * // => [1, 1]
+     * // => ['b', 'b']
      */
     var pull = rest(pullAll);
 
@@ -16222,11 +16307,11 @@ return jQuery;
      * @returns {Array} Returns `array`.
      * @example
      *
-     * var array = [1, 2, 3, 1, 2, 3];
+     * var array = ['a', 'b', 'c', 'a', 'b', 'c'];
      *
-     * _.pullAll(array, [2, 3]);
+     * _.pullAll(array, ['a', 'c']);
      * console.log(array);
-     * // => [1, 1]
+     * // => ['b', 'b']
      */
     function pullAll(array, values) {
       return (array && array.length && values && values.length)
@@ -16308,14 +16393,14 @@ return jQuery;
      * @returns {Array} Returns the new array of removed elements.
      * @example
      *
-     * var array = [5, 10, 15, 20];
-     * var evens = _.pullAt(array, 1, 3);
+     * var array = ['a', 'b', 'c', 'd'];
+     * var pulled = _.pullAt(array, [1, 3]);
      *
      * console.log(array);
-     * // => [5, 15]
+     * // => ['a', 'c']
      *
-     * console.log(evens);
-     * // => [10, 20]
+     * console.log(pulled);
+     * // => ['b', 'd']
      */
     var pullAt = rest(function(array, indexes) {
       indexes = baseFlatten(indexes, 1);
@@ -16455,9 +16540,6 @@ return jQuery;
      *
      * _.sortedIndex([30, 50], 40);
      * // => 1
-     *
-     * _.sortedIndex([4, 5], 4);
-     * // => 0
      */
     function sortedIndex(array, value) {
       return baseSortedIndex(array, value);
@@ -16480,13 +16562,13 @@ return jQuery;
      *  into `array`.
      * @example
      *
-     * var dict = { 'thirty': 30, 'forty': 40, 'fifty': 50 };
+     * var objects = [{ 'x': 4 }, { 'x': 5 }];
      *
-     * _.sortedIndexBy(['thirty', 'fifty'], 'forty', _.propertyOf(dict));
-     * // => 1
+     * _.sortedIndexBy(objects, { 'x': 4 }, function(o) { return o.x; });
+     * // => 0
      *
      * // The `_.property` iteratee shorthand.
-     * _.sortedIndexBy([{ 'x': 4 }, { 'x': 5 }], { 'x': 4 }, 'x');
+     * _.sortedIndexBy(objects, { 'x': 4 }, 'x');
      * // => 0
      */
     function sortedIndexBy(array, value, iteratee) {
@@ -16506,8 +16588,8 @@ return jQuery;
      * @returns {number} Returns the index of the matched value, else `-1`.
      * @example
      *
-     * _.sortedIndexOf([1, 1, 2, 2], 2);
-     * // => 2
+     * _.sortedIndexOf([4, 5, 5, 5, 6], 5);
+     * // => 1
      */
     function sortedIndexOf(array, value) {
       var length = array ? array.length : 0;
@@ -16535,8 +16617,8 @@ return jQuery;
      *  into `array`.
      * @example
      *
-     * _.sortedLastIndex([4, 5], 4);
-     * // => 1
+     * _.sortedLastIndex([4, 5, 5, 5, 6], 5);
+     * // => 4
      */
     function sortedLastIndex(array, value) {
       return baseSortedIndex(array, value, true);
@@ -16559,8 +16641,13 @@ return jQuery;
      *  into `array`.
      * @example
      *
+     * var objects = [{ 'x': 4 }, { 'x': 5 }];
+     *
+     * _.sortedLastIndexBy(objects, { 'x': 4 }, function(o) { return o.x; });
+     * // => 1
+     *
      * // The `_.property` iteratee shorthand.
-     * _.sortedLastIndexBy([{ 'x': 4 }, { 'x': 5 }], { 'x': 4 }, 'x');
+     * _.sortedLastIndexBy(objects, { 'x': 4 }, 'x');
      * // => 1
      */
     function sortedLastIndexBy(array, value, iteratee) {
@@ -16580,7 +16667,7 @@ return jQuery;
      * @returns {number} Returns the index of the matched value, else `-1`.
      * @example
      *
-     * _.sortedLastIndexOf([1, 1, 2, 2], 2);
+     * _.sortedLastIndexOf([4, 5, 5, 5, 6], 5);
      * // => 3
      */
     function sortedLastIndexOf(array, value) {
@@ -16820,8 +16907,8 @@ return jQuery;
      * @returns {Array} Returns the new array of combined values.
      * @example
      *
-     * _.union([2, 1], [4, 2], [1, 2]);
-     * // => [2, 1, 4]
+     * _.union([2], [1, 2]);
+     * // => [2, 1]
      */
     var union = rest(function(arrays) {
       return baseUniq(baseFlatten(arrays, 1, isArrayLikeObject, true));
@@ -16843,8 +16930,8 @@ return jQuery;
      * @returns {Array} Returns the new array of combined values.
      * @example
      *
-     * _.unionBy([2.1, 1.2], [4.3, 2.4], Math.floor);
-     * // => [2.1, 1.2, 4.3]
+     * _.unionBy([2.1], [1.2, 2.3], Math.floor);
+     * // => [2.1, 1.2]
      *
      * // The `_.property` iteratee shorthand.
      * _.unionBy([{ 'x': 1 }], [{ 'x': 2 }, { 'x': 1 }], 'x');
@@ -16951,7 +17038,7 @@ return jQuery;
      * @returns {Array} Returns the new duplicate free array.
      * @example
      *
-     * var objects = [{ 'x': 1, 'y': 2 }, { 'x': 2, 'y': 1 },  { 'x': 1, 'y': 2 }];
+     * var objects = [{ 'x': 1, 'y': 2 }, { 'x': 2, 'y': 1 }, { 'x': 1, 'y': 2 }];
      *
      * _.uniqWith(objects, _.isEqual);
      * // => [{ 'x': 1, 'y': 2 }, { 'x': 2, 'y': 1 }]
@@ -17046,7 +17133,7 @@ return jQuery;
      * @see _.difference, _.xor
      * @example
      *
-     * _.without([1, 2, 1, 3], 1, 2);
+     * _.without([2, 1, 2, 3], 1, 2);
      * // => [3]
      */
     var without = rest(function(array, values) {
@@ -17070,8 +17157,8 @@ return jQuery;
      * @see _.difference, _.without
      * @example
      *
-     * _.xor([2, 1], [4, 2]);
-     * // => [1, 4]
+     * _.xor([2, 1], [2, 3]);
+     * // => [1, 3]
      */
     var xor = rest(function(arrays) {
       return baseXor(arrayFilter(arrays, isArrayLikeObject));
@@ -17093,8 +17180,8 @@ return jQuery;
      * @returns {Array} Returns the new array of filtered values.
      * @example
      *
-     * _.xorBy([2.1, 1.2], [4.3, 2.4], Math.floor);
-     * // => [1.2, 4.3]
+     * _.xorBy([2.1, 1.2], [2.3, 3.4], Math.floor);
+     * // => [1.2, 3.4]
      *
      * // The `_.property` iteratee shorthand.
      * _.xorBy([{ 'x': 1 }], [{ 'x': 2 }, { 'x': 1 }], 'x');
@@ -17327,9 +17414,6 @@ return jQuery;
      *
      * _(object).at(['a[0].b.c', 'a[1]']).value();
      * // => [3, 4]
-     *
-     * _(['a', 'b', 'c']).at(0, 2).value();
-     * // => ['a', 'c']
      */
     var wrapperAt = rest(function(paths) {
       paths = baseFlatten(paths, 1);
@@ -17592,6 +17676,7 @@ return jQuery;
      * _.countBy([6.1, 4.2, 6.3], Math.floor);
      * // => { '4': 1, '6': 2 }
      *
+     * // The `_.property` iteratee shorthand.
      * _.countBy(['one', 'two', 'three'], 'length');
      * // => { '3': 2, '5': 1 }
      */
@@ -17697,6 +17782,7 @@ return jQuery;
      * @param {Array|Object} collection The collection to search.
      * @param {Array|Function|Object|string} [predicate=_.identity]
      *  The function invoked per iteration.
+     * @param {number} [fromIndex=0] The index to search from.
      * @returns {*} Returns the matched element, else `undefined`.
      * @example
      *
@@ -17721,14 +17807,7 @@ return jQuery;
      * _.find(users, 'active');
      * // => object for 'barney'
      */
-    function find(collection, predicate) {
-      predicate = getIteratee(predicate, 3);
-      if (isArray(collection)) {
-        var index = baseFindIndex(collection, predicate);
-        return index > -1 ? collection[index] : undefined;
-      }
-      return baseFind(collection, predicate, baseEach);
-    }
+    var find = createFind(findIndex);
 
     /**
      * This method is like `_.find` except that it iterates over elements of
@@ -17741,6 +17820,7 @@ return jQuery;
      * @param {Array|Object} collection The collection to search.
      * @param {Array|Function|Object|string} [predicate=_.identity]
      *  The function invoked per iteration.
+     * @param {number} [fromIndex=collection.length-1] The index to search from.
      * @returns {*} Returns the matched element, else `undefined`.
      * @example
      *
@@ -17749,14 +17829,7 @@ return jQuery;
      * });
      * // => 3
      */
-    function findLast(collection, predicate) {
-      predicate = getIteratee(predicate, 3);
-      if (isArray(collection)) {
-        var index = baseFindIndex(collection, predicate, true);
-        return index > -1 ? collection[index] : undefined;
-      }
-      return baseFind(collection, predicate, baseEachRight);
-    }
+    var findLast = createFind(findLastIndex);
 
     /**
      * Creates a flattened array of values by running each element in `collection`
@@ -18513,7 +18586,6 @@ return jQuery;
      * @static
      * @memberOf _
      * @since 2.4.0
-     * @type {Function}
      * @category Date
      * @returns {number} Returns the timestamp.
      * @example
@@ -18521,9 +18593,11 @@ return jQuery;
      * _.defer(function(stamp) {
      *   console.log(_.now() - stamp);
      * }, _.now());
-     * // => Logs the number of milliseconds it took for the deferred function to be invoked.
+     * // => Logs the number of milliseconds it took for the deferred invocation.
      */
-    var now = Date.now;
+    function now() {
+      return Date.now();
+    }
 
     /*------------------------------------------------------------------------*/
 
@@ -18627,7 +18701,7 @@ return jQuery;
      * The `_.bind.placeholder` value, which defaults to `_` in monolithic builds,
      * may be used as a placeholder for partially applied arguments.
      *
-     * **Note:** Unlike native `Function#bind` this method doesn't set the "length"
+     * **Note:** Unlike native `Function#bind`, this method doesn't set the "length"
      * property of bound functions.
      *
      * @static
@@ -18867,7 +18941,7 @@ return jQuery;
           maxWait,
           result,
           timerId,
-          lastCallTime = 0,
+          lastCallTime,
           lastInvokeTime = 0,
           leading = false,
           maxing = false,
@@ -18918,7 +18992,7 @@ return jQuery;
         // Either this is the first call, activity has stopped and we're at the
         // trailing edge, the system time has gone backwards and we're treating
         // it as the trailing edge, or we've hit the `maxWait` limit.
-        return (!lastCallTime || (timeSinceLastCall >= wait) ||
+        return (lastCallTime === undefined || (timeSinceLastCall >= wait) ||
           (timeSinceLastCall < 0) || (maxing && timeSinceLastInvoke >= maxWait));
       }
 
@@ -18932,7 +19006,6 @@ return jQuery;
       }
 
       function trailingEdge(time) {
-        clearTimeout(timerId);
         timerId = undefined;
 
         // Only invoke if we have `lastArgs` which means `func` has been
@@ -18945,11 +19018,8 @@ return jQuery;
       }
 
       function cancel() {
-        if (timerId !== undefined) {
-          clearTimeout(timerId);
-        }
-        lastCallTime = lastInvokeTime = 0;
-        lastArgs = lastThis = timerId = undefined;
+        lastInvokeTime = 0;
+        lastArgs = lastCallTime = lastThis = timerId = undefined;
       }
 
       function flush() {
@@ -18970,7 +19040,6 @@ return jQuery;
           }
           if (maxing) {
             // Handle invocations in a tight loop.
-            clearTimeout(timerId);
             timerId = setTimeout(timerExpired, wait);
             return invokeFunc(lastCallTime);
           }
@@ -19194,7 +19263,7 @@ return jQuery;
      *
      * var func = _.overArgs(function(x, y) {
      *   return [x, y];
-     * }, square, doubled);
+     * }, [square, doubled]);
      *
      * func(9, 3);
      * // => [81, 6]
@@ -19311,7 +19380,7 @@ return jQuery;
      *
      * var rearged = _.rearg(function(a, b, c) {
      *   return [a, b, c];
-     * }, 2, 0, 1);
+     * }, [2, 0, 1]);
      *
      * rearged('b', 'c', 'a')
      * // => ['a', 'b', 'c']
@@ -19950,7 +20019,7 @@ return jQuery;
      * _.isBuffer(new Uint8Array(2));
      * // => false
      */
-    var isBuffer = !Buffer ? constant(false) : function(value) {
+    var isBuffer = !Buffer ? stubFalse : function(value) {
       return value instanceof Buffer;
     };
 
@@ -20450,7 +20519,15 @@ return jQuery;
     }
 
     /**
-     * Checks if `value` is a native function.
+     * Checks if `value` is a pristine native function.
+     *
+     * **Note:** This method can't reliably detect native functions in the
+     * presence of the `core-js` package because `core-js` circumvents this kind
+     * of detection. Despite multiple requests, the `core-js` maintainer has made
+     * it clear: any attempt to fix the detection will be obstructed. As a result,
+     * we're left with little choice but to throw an error. Unfortunately, this
+     * also affects packages, like [babel-polyfill](https://www.npmjs.com/package/babel-polyfill),
+     * which rely on `core-js`.
      *
      * @static
      * @memberOf _
@@ -20468,11 +20545,10 @@ return jQuery;
      * // => false
      */
     function isNative(value) {
-      if (!isObject(value)) {
-        return false;
+      if (isMaskable(value)) {
+        throw new Error('This method is not supported with `core-js`. Try https://github.com/es-shims.');
       }
-      var pattern = (isFunction(value) || isHostObject(value)) ? reIsNative : reIsHostCtor;
-      return pattern.test(toSource(value));
+      return baseIsNative(value);
     }
 
     /**
@@ -20934,7 +21010,7 @@ return jQuery;
     /**
      * Converts `value` to an integer.
      *
-     * **Note:** This function is loosely based on
+     * **Note:** This method is loosely based on
      * [`ToInteger`](http://www.ecma-international.org/ecma-262/6.0/#sec-tointeger).
      *
      * @static
@@ -21288,9 +21364,6 @@ return jQuery;
      *
      * _.at(object, ['a[0].b.c', 'a[1]']);
      * // => [3, 4]
-     *
-     * _.at(['a', 'b', 'c'], 0, 2);
-     * // => ['a', 'c']
      */
     var at = rest(function(object, paths) {
       return baseAt(object, baseFlatten(paths, 1));
@@ -21423,7 +21496,7 @@ return jQuery;
      * // => 'barney'
      */
     function findKey(object, predicate) {
-      return baseFind(object, getIteratee(predicate, 3), baseForOwn, true);
+      return baseFindKey(object, getIteratee(predicate, 3), baseForOwn);
     }
 
     /**
@@ -21463,7 +21536,7 @@ return jQuery;
      * // => 'pebbles'
      */
     function findLastKey(object, predicate) {
-      return baseFind(object, getIteratee(predicate, 3), baseForOwnRight, true);
+      return baseFindKey(object, getIteratee(predicate, 3), baseForOwnRight);
     }
 
     /**
@@ -22322,15 +22395,16 @@ return jQuery;
      * An alternative to `_.reduce`; this method transforms `object` to a new
      * `accumulator` object which is the result of running each of its own
      * enumerable string keyed properties thru `iteratee`, with each invocation
-     * potentially mutating the `accumulator` object. The iteratee is invoked
-     * with four arguments: (accumulator, value, key, object). Iteratee functions
-     * may exit iteration early by explicitly returning `false`.
+     * potentially mutating the `accumulator` object. If `accumulator` is not
+     * provided, a new object with the same `[[Prototype]]` will be used. The
+     * iteratee is invoked with four arguments: (accumulator, value, key, object).
+     * Iteratee functions may exit iteration early by explicitly returning `false`.
      *
      * @static
      * @memberOf _
      * @since 1.3.0
      * @category Object
-     * @param {Array|Object} object The object to iterate over.
+     * @param {Object} object The object to iterate over.
      * @param {Function} [iteratee=_.identity] The function invoked per iteration.
      * @param {*} [accumulator] The custom accumulator value.
      * @returns {*} Returns the accumulated value.
@@ -22752,7 +22826,7 @@ return jQuery;
      * @category String
      * @param {string} [string=''] The string to search.
      * @param {string} [target] The string to search for.
-     * @param {number} [position=string.length] The position to search from.
+     * @param {number} [position=string.length] The position to search up to.
      * @returns {boolean} Returns `true` if `string` ends with `target`,
      *  else `false`.
      * @example
@@ -23837,7 +23911,7 @@ return jQuery;
      *   }
      * };
      *
-     * _.bindAll(view, 'onClick');
+     * _.bindAll(view, ['onClick']);
      * jQuery(element).on('click', view.onClick);
      * // => Logs 'clicked docs' when clicked.
      */
@@ -23918,7 +23992,7 @@ return jQuery;
      *   { 'user': 'fred',   'age': 40 }
      * ];
      *
-     * _.filter(users, _.conforms({ 'age': _.partial(_.gt, _, 38) }));
+     * _.filter(users, _.conforms({ 'age': function(n) { return n > 38; } }));
      * // => [{ 'user': 'fred', 'age': 40 }]
      */
     function conforms(source) {
@@ -23936,10 +24010,12 @@ return jQuery;
      * @returns {Function} Returns the new constant function.
      * @example
      *
-     * var object = { 'user': 'fred' };
-     * var getter = _.constant(object);
+     * var objects = _.times(2, _.constant({ 'a': 1 }));
      *
-     * getter() === object;
+     * console.log(objects);
+     * // => [{ 'a': 1 }, { 'a': 1 }]
+     *
+     * console.log(objects[0] === objects[1]);
      * // => true
      */
     function constant(value) {
@@ -23966,7 +24042,7 @@ return jQuery;
      *   return n * n;
      * }
      *
-     * var addSquare = _.flow(_.add, square);
+     * var addSquare = _.flow([_.add, square]);
      * addSquare(1, 2);
      * // => 9
      */
@@ -23989,7 +24065,7 @@ return jQuery;
      *   return n * n;
      * }
      *
-     * var addSquare = _.flowRight(square, _.add);
+     * var addSquare = _.flowRight([square, _.add]);
      * addSquare(1, 2);
      * // => 9
      */
@@ -24008,7 +24084,7 @@ return jQuery;
      *
      * var object = { 'user': 'fred' };
      *
-     * _.identity(object) === object;
+     * console.log(_.identity(object) === object);
      * // => true
      */
     function identity(value) {
@@ -24269,8 +24345,7 @@ return jQuery;
     }
 
     /**
-     * A no-operation function that returns `undefined` regardless of the
-     * arguments it receives.
+     * A method that returns `undefined`.
      *
      * @static
      * @memberOf _
@@ -24278,17 +24353,15 @@ return jQuery;
      * @category Util
      * @example
      *
-     * var object = { 'user': 'fred' };
-     *
-     * _.noop(object) === undefined;
-     * // => true
+     * _.times(2, _.noop);
+     * // => [undefined, undefined]
      */
     function noop() {
       // No operation performed.
     }
 
     /**
-     * Creates a function that gets the argument at `n` index. If `n` is negative,
+     * Creates a function that gets the argument at index `n`. If `n` is negative,
      * the nth argument from the end is returned.
      *
      * @static
@@ -24327,7 +24400,7 @@ return jQuery;
      * @returns {Function} Returns the new function.
      * @example
      *
-     * var func = _.over(Math.max, Math.min);
+     * var func = _.over([Math.max, Math.min]);
      *
      * func(1, 2, 3, 4);
      * // => [4, 1]
@@ -24347,7 +24420,7 @@ return jQuery;
      * @returns {Function} Returns the new function.
      * @example
      *
-     * var func = _.overEvery(Boolean, isFinite);
+     * var func = _.overEvery([Boolean, isFinite]);
      *
      * func('1');
      * // => true
@@ -24373,7 +24446,7 @@ return jQuery;
      * @returns {Function} Returns the new function.
      * @example
      *
-     * var func = _.overSome(Boolean, isFinite);
+     * var func = _.overSome([Boolean, isFinite]);
      *
      * func('1');
      * // => true
@@ -24521,6 +24594,101 @@ return jQuery;
     var rangeRight = createRange(true);
 
     /**
+     * A method that returns a new empty array.
+     *
+     * @static
+     * @memberOf _
+     * @since 4.13.0
+     * @category Util
+     * @returns {Array} Returns the new empty array.
+     * @example
+     *
+     * var arrays = _.times(2, _.stubArray);
+     *
+     * console.log(arrays);
+     * // => [[], []]
+     *
+     * console.log(arrays[0] === arrays[1]);
+     * // => false
+     */
+    function stubArray() {
+      return [];
+    }
+
+    /**
+     * A method that returns `false`.
+     *
+     * @static
+     * @memberOf _
+     * @since 4.13.0
+     * @category Util
+     * @returns {boolean} Returns `false`.
+     * @example
+     *
+     * _.times(2, _.stubFalse);
+     * // => [false, false]
+     */
+    function stubFalse() {
+      return false;
+    }
+
+    /**
+     * A method that returns a new empty object.
+     *
+     * @static
+     * @memberOf _
+     * @since 4.13.0
+     * @category Util
+     * @returns {Object} Returns the new empty object.
+     * @example
+     *
+     * var objects = _.times(2, _.stubObject);
+     *
+     * console.log(objects);
+     * // => [{}, {}]
+     *
+     * console.log(objects[0] === objects[1]);
+     * // => false
+     */
+    function stubObject() {
+      return {};
+    }
+
+    /**
+     * A method that returns an empty string.
+     *
+     * @static
+     * @memberOf _
+     * @since 4.13.0
+     * @category Util
+     * @returns {string} Returns the empty string.
+     * @example
+     *
+     * _.times(2, _.stubString);
+     * // => ['', '']
+     */
+    function stubString() {
+      return '';
+    }
+
+    /**
+     * A method that returns `true`.
+     *
+     * @static
+     * @memberOf _
+     * @since 4.13.0
+     * @category Util
+     * @returns {boolean} Returns `true`.
+     * @example
+     *
+     * _.times(2, _.stubTrue);
+     * // => [true, true]
+     */
+    function stubTrue() {
+      return true;
+    }
+
+    /**
      * Invokes the iteratee `n` times, returning an array of the results of
      * each invocation. The iteratee is invoked with one argument; (index).
      *
@@ -24536,8 +24704,8 @@ return jQuery;
      * _.times(3, String);
      * // => ['0', '1', '2']
      *
-     *  _.times(4, _.constant(true));
-     * // => [true, true, true, true]
+     *  _.times(4, _.constant(0));
+     * // => [0, 0, 0, 0]
      */
     function times(n, iteratee) {
       n = toInteger(n);
@@ -24573,15 +24741,6 @@ return jQuery;
      *
      * _.toPath('a[0].b.c');
      * // => ['a', '0', 'b', 'c']
-     *
-     * var path = ['a', 'b', 'c'],
-     *     newPath = _.toPath(path);
-     *
-     * console.log(newPath);
-     * // => ['a', 'b', 'c']
-     *
-     * console.log(path === newPath);
-     * // => false
      */
     function toPath(value) {
       if (isArray(value)) {
@@ -25220,6 +25379,11 @@ return jQuery;
     lodash.meanBy = meanBy;
     lodash.min = min;
     lodash.minBy = minBy;
+    lodash.stubArray = stubArray;
+    lodash.stubFalse = stubFalse;
+    lodash.stubObject = stubObject;
+    lodash.stubString = stubString;
+    lodash.stubTrue = stubTrue;
     lodash.multiply = multiply;
     lodash.nth = nth;
     lodash.noConflict = noConflict;
@@ -25526,7 +25690,7 @@ return jQuery;
   // also prevents errors in cases where Lodash is loaded by a script tag in the
   // presence of an AMD loader. See http://requirejs.org/docs/errors.html#mismatch
   // for more details. Use `_.noConflict` to remove Lodash from the global object.
-  (freeWindow || freeSelf || {})._ = _;
+  (freeSelf || {})._ = _;
 
   // Some AMD build optimizers like r.js check for condition patterns like the following:
   if (typeof define == 'function' && typeof define.amd == 'object' && define.amd) {
@@ -25537,11 +25701,9 @@ return jQuery;
     });
   }
   // Check for `exports` after `define` in case a build optimizer adds an `exports` object.
-  else if (freeExports && freeModule) {
+  else if (freeModule) {
     // Export for Node.js.
-    if (moduleExports) {
-      (freeModule.exports = _)._ = _;
-    }
+    (freeModule.exports = _)._ = _;
     // Export for CommonJS support.
     freeExports._ = _;
   }
@@ -48227,36 +48389,418 @@ module.exports = warning;
 module.exports = require('./lib/React');
 
 },{"./lib/React":70}],198:[function(require,module,exports){
+/*
+ * Toastr
+ * Copyright 2012-2014 
+ * Authors: John Papa, Hans Fjällemark, and Tim Ferrell.
+ * All Rights Reserved.
+ * Use, reproduction, distribution, and modification of this code is subject to the terms and
+ * conditions of the MIT license, available at http://www.opensource.org/licenses/mit-license.php
+ *
+ * ARIA Support: Greta Krafsig
+ *
+ * Project: https://github.com/CodeSeven/toastr
+ */
+; (function (define) {
+    define(['jquery'], function ($) {
+        return (function () {
+            var $container;
+            var listener;
+            var toastId = 0;
+            var toastType = {
+                error: 'error',
+                info: 'info',
+                success: 'success',
+                warning: 'warning'
+            };
+
+            var toastr = {
+                clear: clear,
+                remove: remove,
+                error: error,
+                getContainer: getContainer,
+                info: info,
+                options: {},
+                subscribe: subscribe,
+                success: success,
+                version: '2.1.0',
+                warning: warning
+            };
+
+            var previousToast;
+
+            return toastr;
+
+            //#region Accessible Methods
+            function error(message, title, optionsOverride) {
+                return notify({
+                    type: toastType.error,
+                    iconClass: getOptions().iconClasses.error,
+                    message: message,
+                    optionsOverride: optionsOverride,
+                    title: title
+                });
+            }
+
+            function getContainer(options, create) {
+                if (!options) { options = getOptions(); }
+                $container = $('#' + options.containerId);
+                if ($container.length) {
+                    return $container;
+                }
+                if (create) {
+                    $container = createContainer(options);
+                }
+                return $container;
+            }
+
+            function info(message, title, optionsOverride) {
+                return notify({
+                    type: toastType.info,
+                    iconClass: getOptions().iconClasses.info,
+                    message: message,
+                    optionsOverride: optionsOverride,
+                    title: title
+                });
+            }
+
+            function subscribe(callback) {
+                listener = callback;
+            }
+
+            function success(message, title, optionsOverride) {
+                return notify({
+                    type: toastType.success,
+                    iconClass: getOptions().iconClasses.success,
+                    message: message,
+                    optionsOverride: optionsOverride,
+                    title: title
+                });
+            }
+
+            function warning(message, title, optionsOverride) {
+                return notify({
+                    type: toastType.warning,
+                    iconClass: getOptions().iconClasses.warning,
+                    message: message,
+                    optionsOverride: optionsOverride,
+                    title: title
+                });
+            }
+
+            function clear($toastElement) {
+                var options = getOptions();
+                if (!$container) { getContainer(options); }
+                if (!clearToast($toastElement, options)) {
+                    clearContainer(options);
+                }
+            }
+
+            function remove($toastElement) {
+                var options = getOptions();
+                if (!$container) { getContainer(options); }
+                if ($toastElement && $(':focus', $toastElement).length === 0) {
+                    removeToast($toastElement);
+                    return;
+                }
+                if ($container.children().length) {
+                    $container.remove();
+                }
+            }
+            //#endregion
+
+            //#region Internal Methods
+
+            function clearContainer (options) {
+                var toastsToClear = $container.children();
+                for (var i = toastsToClear.length - 1; i >= 0; i--) {
+                    clearToast($(toastsToClear[i]), options);
+                }
+            }
+
+            function clearToast ($toastElement, options) {
+                if ($toastElement && $(':focus', $toastElement).length === 0) {
+                    $toastElement[options.hideMethod]({
+                        duration: options.hideDuration,
+                        easing: options.hideEasing,
+                        complete: function () { removeToast($toastElement); }
+                    });
+                    return true;
+                }
+                return false;
+            }
+
+            function createContainer(options) {
+                $container = $('<div/>')
+                    .attr('id', options.containerId)
+                    .addClass(options.positionClass)
+                    .attr('aria-live', 'polite')
+                    .attr('role', 'alert');
+
+                $container.appendTo($(options.target));
+                return $container;
+            }
+
+            function getDefaults() {
+                return {
+                    tapToDismiss: true,
+                    toastClass: 'toast',
+                    containerId: 'toast-container',
+                    debug: false,
+
+                    showMethod: 'fadeIn', //fadeIn, slideDown, and show are built into jQuery
+                    showDuration: 300,
+                    showEasing: 'swing', //swing and linear are built into jQuery
+                    onShown: undefined,
+                    hideMethod: 'fadeOut',
+                    hideDuration: 1000,
+                    hideEasing: 'swing',
+                    onHidden: undefined,
+
+                    extendedTimeOut: 1000,
+                    iconClasses: {
+                        error: 'toast-error',
+                        info: 'toast-info',
+                        success: 'toast-success',
+                        warning: 'toast-warning'
+                    },
+                    iconClass: 'toast-info',
+                    positionClass: 'toast-top-right',
+                    timeOut: 5000, // Set timeOut and extendedTimeOut to 0 to make it sticky
+                    titleClass: 'toast-title',
+                    messageClass: 'toast-message',
+                    target: 'body',
+                    closeHtml: '<button>&times;</button>',
+                    newestOnTop: true,
+                    preventDuplicates: false,
+                    progressBar: false
+                };
+            }
+
+            function publish(args) {
+                if (!listener) { return; }
+                listener(args);
+            }
+
+            function notify(map) {
+                var options = getOptions(),
+                    iconClass = map.iconClass || options.iconClass;
+
+                if (options.preventDuplicates) {
+                    if (map.message === previousToast) {
+                        return;
+                    } else {
+                        previousToast = map.message;
+                    }
+                }
+
+                if (typeof (map.optionsOverride) !== 'undefined') {
+                    options = $.extend(options, map.optionsOverride);
+                    iconClass = map.optionsOverride.iconClass || iconClass;
+                }
+
+                toastId++;
+
+                $container = getContainer(options, true);
+                var intervalId = null,
+                    $toastElement = $('<div/>'),
+                    $titleElement = $('<div/>'),
+                    $messageElement = $('<div/>'),
+                    $progressElement = $('<div/>'),
+                    $closeElement = $(options.closeHtml),
+                    progressBar = {
+                        intervalId: null,
+                        hideEta: null,
+                        maxHideTime: null
+                    },
+                    response = {
+                        toastId: toastId,
+                        state: 'visible',
+                        startTime: new Date(),
+                        options: options,
+                        map: map
+                    };
+
+                if (map.iconClass) {
+                    $toastElement.addClass(options.toastClass).addClass(iconClass);
+                }
+
+                if (map.title) {
+                    $titleElement.append(map.title).addClass(options.titleClass);
+                    $toastElement.append($titleElement);
+                }
+
+                if (map.message) {
+                    $messageElement.append(map.message).addClass(options.messageClass);
+                    $toastElement.append($messageElement);
+                }
+
+                if (options.closeButton) {
+                    $closeElement.addClass('toast-close-button').attr('role', 'button');
+                    $toastElement.prepend($closeElement);
+                }
+
+                if (options.progressBar) {
+                    $progressElement.addClass('toast-progress');
+                    $toastElement.prepend($progressElement);
+                }
+
+                $toastElement.hide();
+                if (options.newestOnTop) {
+                    $container.prepend($toastElement);
+                } else {
+                    $container.append($toastElement);
+                }
+                $toastElement[options.showMethod](
+                    {duration: options.showDuration, easing: options.showEasing, complete: options.onShown}
+                );
+
+                if (options.timeOut > 0) {
+                    intervalId = setTimeout(hideToast, options.timeOut);
+                    progressBar.maxHideTime = parseFloat(options.timeOut);
+                    progressBar.hideEta = new Date().getTime() + progressBar.maxHideTime;
+                    if (options.progressBar) {
+                        progressBar.intervalId = setInterval(updateProgress, 10);
+                    }
+                }
+
+                $toastElement.hover(stickAround, delayedHideToast);
+                if (!options.onclick && options.tapToDismiss) {
+                    $toastElement.click(hideToast);
+                }
+
+                if (options.closeButton && $closeElement) {
+                    $closeElement.click(function (event) {
+                        if (event.stopPropagation) {
+                            event.stopPropagation();
+                        } else if (event.cancelBubble !== undefined && event.cancelBubble !== true) {
+                            event.cancelBubble = true;
+                        }
+                        hideToast(true);
+                    });
+                }
+
+                if (options.onclick) {
+                    $toastElement.click(function () {
+                        options.onclick();
+                        hideToast();
+                    });
+                }
+
+                publish(response);
+
+                if (options.debug && console) {
+                    console.log(response);
+                }
+
+                return $toastElement;
+
+                function hideToast(override) {
+                    if ($(':focus', $toastElement).length && !override) {
+                        return;
+                    }
+                    clearTimeout(progressBar.intervalId);
+                    return $toastElement[options.hideMethod]({
+                        duration: options.hideDuration,
+                        easing: options.hideEasing,
+                        complete: function () {
+                            removeToast($toastElement);
+                            if (options.onHidden && response.state !== 'hidden') {
+                                options.onHidden();
+                            }
+                            response.state = 'hidden';
+                            response.endTime = new Date();
+                            publish(response);
+                        }
+                    });
+                }
+
+                function delayedHideToast() {
+                    if (options.timeOut > 0 || options.extendedTimeOut > 0) {
+                        intervalId = setTimeout(hideToast, options.extendedTimeOut);
+                        progressBar.maxHideTime = parseFloat(options.extendedTimeOut);
+                        progressBar.hideEta = new Date().getTime() + progressBar.maxHideTime;
+                    }
+                }
+
+                function stickAround() {
+                    clearTimeout(intervalId);
+                    progressBar.hideEta = 0;
+                    $toastElement.stop(true, true)[options.showMethod](
+                        {duration: options.showDuration, easing: options.showEasing}
+                    );
+                }
+
+                function updateProgress() {
+                    var percentage = ((progressBar.hideEta - (new Date().getTime())) / progressBar.maxHideTime) * 100;
+                    $progressElement.width(percentage + '%');
+                }
+            }
+
+            function getOptions() {
+                return $.extend({}, getDefaults(), toastr.options);
+            }
+
+            function removeToast($toastElement) {
+                if (!$container) { $container = getContainer(); }
+                if ($toastElement.is(':visible')) {
+                    return;
+                }
+                $toastElement.remove();
+                $toastElement = null;
+                if ($container.children().length === 0) {
+                    $container.remove();
+                }
+            }
+            //#endregion
+
+        })();
+    });
+}(typeof define === 'function' && define.amd ? define : function (deps, factory) {
+    if (typeof module !== 'undefined' && module.exports) { //Node
+        module.exports = factory(require('jquery'));
+    } else {
+        window['toastr'] = factory(window['jQuery']);
+    }
+}));
+
+},{"jquery":2}],199:[function(require,module,exports){
 "use strict";
 
+//This file is mocking a web API by hitting hard coded data.
 var authors = require('./authorData').authors;
 var _ = require('lodash');
 
+//This would be performed on the server in a real app. Just stubbing in.
 var _generateId = function(author) {
-    return author.firstName.toLowerCase() + '-' + author.lastname.toLowerCase();
+    return author.firstName.toLowerCase() + '-' + author.lastName.toLowerCase();
 };
 
 var _clone = function(item) {
-    return JSON.parse(JSON.stringify(item));
+    return JSON.parse(JSON.stringify(item)); //return cloned copy so that the item is passed by value instead of by reference
 };
 
 var AuthorApi = {
     getAllAuthors: function() {
-        return _clone(authors);
+        return _clone(authors); 
     },
 
     getAuthorById: function(id) {
         var author = _.find(authors, {id: id});
         return _clone(author);
     },
-
+    
     saveAuthor: function(author) {
+        //pretend an ajax call to web api is made here
         console.log('Pretend this just saved the author to the DB via AJAX call...');
-
+        
         if (author.id) {
-            var existingAuthorIndex = _.indexOf(authors, _.find(authors, {id: author.id}));
+            var existingAuthorIndex = _.indexOf(authors, _.find(authors, {id: author.id})); 
             authors.splice(existingAuthorIndex, 1, author);
         } else {
+            //Just simulating creation here.
+            //The server would generate ids for new authors in a real app.
+            //Cloning so copy returned is passed by value rather than by reference.
             author.id = _generateId(author);
             authors.push(author);
         }
@@ -48266,14 +48810,14 @@ var AuthorApi = {
 
     deleteAuthor: function(id) {
         console.log('Pretend this just deleted the author from the DB via an AJAX call...');
-        _.remove(authors, {id: id});
+        _.remove(authors, { id: id});
     }
 };
 
 module.exports = AuthorApi;
 
-},{"./authorData":199,"lodash":3}],199:[function(require,module,exports){
-var authorData = {
+},{"./authorData":200,"lodash":3}],200:[function(require,module,exports){
+module.exports = {
     authors:
     [
         {
@@ -48294,20 +48838,32 @@ var authorData = {
     ]
 };
 
-module.exports = authorData;
-
-},{}],200:[function(require,module,exports){
+},{}],201:[function(require,module,exports){
 "use strict";
 
 var React = require('react');
 
 var About = React.createClass({displayName: "About",
+    // statics: {
+    //     willTransitionTo: function(transition, params, query, callback) {
+    //         if (!confirm('Are you sure you want to read a page that\'s this boring?')) {
+    //             transition.about();
+    //         }
+    //     },
+
+    //     willTransitionFrom: function(transition, component) {
+    //         if (!confirm('Are you sure you want to leave this boring page?')) {
+    //             transition.about();
+    //         }
+    //     }
+    // },
+
     render: function() {
         return (
             React.createElement("div", null, 
                 React.createElement("h1", null, "About"), 
                 React.createElement("p", null, 
-                    "This application uses the following technologies:", 
+                    "This appplication uses the following technologies:", 
                     React.createElement("ul", null, 
                         React.createElement("li", null, "React"), 
                         React.createElement("li", null, "React Router"), 
@@ -48315,23 +48871,22 @@ var About = React.createClass({displayName: "About",
                         React.createElement("li", null, "Node"), 
                         React.createElement("li", null, "Gulp"), 
                         React.createElement("li", null, "Browserify"), 
-                        React.createElement("li", null, "Bootstrap"), 
-                        React.createElement("li", null, "React")
+                        React.createElement("li", null, "Bootstrap")
                     )
                 )
-            )      
+            )
         );
     }
 });
 
 module.exports = About;
 
-},{"react":197}],201:[function(require,module,exports){
-/*eslint-disable strict*/
+},{"react":197}],202:[function(require,module,exports){
+/*eslint-disable strict */ //Disable check because need jQuery global variable
 
 var React = require('react');
-var Header = require('./common/header');
 var RouteHandler = require('react-router').RouteHandler;
+var Header = require('./common/header');
 $ = jQuery = require('jquery');
 
 var App = React.createClass({displayName: "App",
@@ -48349,38 +48904,38 @@ var App = React.createClass({displayName: "App",
 
 module.exports = App;
 
-},{"./common/header":206,"jquery":2,"react":197,"react-router":28}],202:[function(require,module,exports){
+},{"./common/header":207,"jquery":2,"react":197,"react-router":28}],203:[function(require,module,exports){
 "use strict";
 
 var React = require('react');
+var Input = require('../common/textInput');
 
 var AuthorForm = React.createClass({displayName: "AuthorForm",
+    propTypes: {
+        author: React.PropTypes.object.isRequired,
+        onSave: React.PropTypes.func.isRequired,
+        onChange: React.PropTypes.func.isRequired,
+        errors: React.PropTypes.object
+    },
 
     render: function() {
         return (
             React.createElement("form", null, 
                 React.createElement("h1", null, "Manage Author"), 
-                React.createElement("label", {htmlForm: "firstName"}, "First Name"), 
-                React.createElement("input", {type: "text", 
-                       name: "firstName", 
-                       className: "form-control", 
-                       placeholder: "First Name", 
-                       ref: "firstName", 
-                       onChange: this.props.onChange, 
-                       value: this.props.author.firstName}), 
-                React.createElement("br", null), 
+                React.createElement(Input, {
+                    name: "firstName", 
+                    label: "First Name", 
+                    value: this.props.author.firstName, 
+                    onChange: this.props.onChange, 
+                    error: this.props.errors.firstName}), 
+                React.createElement(Input, {
+                    name: "lastName", 
+                    label: "Last Name", 
+                    value: this.props.author.lastName, 
+                    onChange: this.props.onChange, 
+                    error: this.props.errors.lastName}), 
 
-                React.createElement("label", {htmlFor: "lastName"}, "Last Name"), 
-                React.createElement("input", {type: "text", 
-                       name: "lastName", 
-                       className: "form-control", 
-                       placeholder: "Last Name", 
-                       ref: "lastName", 
-                       onChange: this.props.onChange, 
-                       value: this.props.author.lastName}), 
-                React.createElement("br", null), 
-
-                React.createElement("input", {type: "submit", value: "Save", className: "btn btn-default"})
+                React.createElement("input", {type: "submit", value: "Save", className: "btn btn-default", onClick: this.props.onSave})
             )
         );
     }
@@ -48388,7 +48943,7 @@ var AuthorForm = React.createClass({displayName: "AuthorForm",
 
 module.exports = AuthorForm;
 
-},{"react":197}],203:[function(require,module,exports){
+},{"../common/textInput":208,"react":197}],204:[function(require,module,exports){
 "use strict";
 
 var React = require('react');
@@ -48397,12 +48952,11 @@ var AuthorList = React.createClass({displayName: "AuthorList",
     propTypes: {
         authors: React.PropTypes.array.isRequired
     },
-
     render: function() {
         var createAuthorRow = function(author) {
             return (
                 React.createElement("tr", {key: author.id}, 
-                    React.createElement("td", null, React.createElement("a", {href: "#/authors/" + author.id}, author.id)), 
+                    React.createElement("td", null, React.createElement("a", {href: "/#authors/" + author.id}, author.id)), 
                     React.createElement("td", null, author.firstName, " ", author.lastName)
                 )
             );
@@ -48415,9 +48969,9 @@ var AuthorList = React.createClass({displayName: "AuthorList",
                         React.createElement("th", null, "ID"), 
                         React.createElement("th", null, "Name")
                     ), 
-                React.createElement("tbody", null, 
-                    this.props.authors.map(createAuthorRow, this)
-                )
+                    React.createElement("tbody", null, 
+                        this.props.authors.map(createAuthorRow, this)
+                    )
                 )
             )
         );
@@ -48426,13 +48980,14 @@ var AuthorList = React.createClass({displayName: "AuthorList",
 
 module.exports = AuthorList;
 
-},{"react":197}],204:[function(require,module,exports){
+},{"react":197}],205:[function(require,module,exports){
 "use strict";
 
 var React = require('react');
+var Router = require('react-router');
+var Link = require('react-router').Link;
 var AuthorApi = require('../../api/authorApi');
 var AuthorList = require('./authorList');
-var Link = require('react-router').Link;
 
 var AuthorPage = React.createClass({displayName: "AuthorPage",
     getInitialState: function() {
@@ -48460,17 +49015,24 @@ var AuthorPage = React.createClass({displayName: "AuthorPage",
 
 module.exports = AuthorPage;
 
-},{"../../api/authorApi":198,"./authorList":203,"react":197,"react-router":28}],205:[function(require,module,exports){
+},{"../../api/authorApi":199,"./authorList":204,"react":197,"react-router":28}],206:[function(require,module,exports){
 "use strict";
 
 var React = require('react');
+var Router = require('react-router');
 var AuthorForm = require('./authorForm');
+var AuthorApi = require('../../api/authorApi');
+var toastr = require('toastr');
 
 var ManageAuthorPage = React.createClass({displayName: "ManageAuthorPage",
+    mixins: [
+        Router.Navigation
+    ],
 
     getInitialState: function() {
         return {
-            author: { id: '', firstName: '', lastName: '' }
+            author: { id: '', firstName: '', lastName: '' },
+            errors: {}
         };
     },
 
@@ -48481,18 +49043,50 @@ var ManageAuthorPage = React.createClass({displayName: "ManageAuthorPage",
         return this.setState({ author: this.state.author });
     },
 
+    authorFormIsValid: function() {
+        var formIsValid = true;
+        this.state.errors = {}; // clear any previous errors
+
+        if (this.state.author.firstName.length < 3) {
+            this.state.errors.firstName = 'First name must be at least 3 characters.';
+            formIsValid = false;
+        }
+
+        if (this.state.author.lastName.length < 3) {
+            this.state.errors.lastName = 'Last name must be at least 3 characters.';
+            formIsValid = false;
+        }
+
+        this.setState({errors: this.state.errors});
+        return formIsValid;
+    },
+
+    saveAuthor: function(event) {
+        event.preventDefault();
+
+        if (!this.authorFormIsValid()) {
+            return;
+        }
+
+        AuthorApi.saveAuthor(this.state.author);
+        toastr.success('Author saved');
+        this.transitionTo('authors');
+    },
+
     render: function() {
         return (
             React.createElement(AuthorForm, {
                 author: this.state.author, 
-                onChange: this.setAuthorState})
+                onChange: this.setAuthorState, 
+                onSave: this.saveAuthor, 
+                errors: this.state.errors})
         );
     }
 });
 
 module.exports = ManageAuthorPage;
 
-},{"./authorForm":202,"react":197}],206:[function(require,module,exports){
+},{"../../api/authorApi":199,"./authorForm":203,"react":197,"react-router":28,"toastr":198}],207:[function(require,module,exports){
 "use strict";
 
 var React = require('react');
@@ -48509,8 +49103,8 @@ var Header = React.createClass({displayName: "Header",
                     ), 
                     React.createElement("ul", {className: "nav navbar-nav"}, 
                         React.createElement("li", null, React.createElement(Link, {to: "app"}, "Home")), 
-                        React.createElement("li", null, React.createElement(Link, {to: "authors"}, "Authors")), 
-                        React.createElement("li", null, React.createElement(Link, {to: "about"}, "About"))
+                        React.createElement("li", null, React.createElement(Link, {to: "about"}, "About")), 
+                        React.createElement("li", null, React.createElement(Link, {to: "authors"}, "Authors"))
                     )
                 )
             )
@@ -48520,7 +49114,48 @@ var Header = React.createClass({displayName: "Header",
 
 module.exports = Header;
 
-},{"react":197,"react-router":28}],207:[function(require,module,exports){
+},{"react":197,"react-router":28}],208:[function(require,module,exports){
+"use strict";
+
+var React = require('react');
+
+var Input = React.createClass({displayName: "Input",
+    propTypes: {
+        name: React.PropTypes.string.isRequired,
+        label: React.PropTypes.string.isRequired,
+        onChange: React.PropTypes.func.isRequired,
+        placeholder: React.PropTypes.string,
+        value: React.PropTypes.string,
+        error: React.PropTypes.string
+    },
+
+    render: function() {
+        var wrapperClass = "form-group";
+        if (this.props.error && this.props.error.length > 0) {
+            wrapperClass += " " + "has-error";
+        }
+
+        return (
+            React.createElement("div", {className: wrapperClass}, 
+                React.createElement("label", {htmlFor: this.props.name}, this.props.label), 
+                React.createElement("div", {className: "field"}, 
+                    React.createElement("input", {type: "text", 
+                        name: this.props.name, 
+                        className: "form-control", 
+                        placeholder: this.props.placeholder, 
+                        ref: this.props.name, 
+                        value: this.props.value, 
+                        onChange: this.props.onChange}), 
+                    React.createElement("div", {className: "input"}, this.props.error)
+                )
+            )
+        );
+    }
+});
+
+module.exports = Input;
+
+},{"react":197}],209:[function(require,module,exports){
 "use strict";
 
 var React = require('react');
@@ -48532,8 +49167,8 @@ var Home = React.createClass({displayName: "Home",
         return (
             React.createElement("div", {className: "jumbotron"}, 
                 React.createElement("h1", null, "Pluralsight Administration"), 
-                React.createElement("p", null, "React, React Router, and Flux for ultra-responsive webapps."), 
-                React.createElement(Link, {to: "about", className: "btn btn-primary btn-lg"}, "Learn More")
+                React.createElement("p", null, "React, React Router, and Flux for ultra-responsive web apps."), 
+                React.createElement(Link, {to: "about", className: "btn btn-primary btn-lg"}, "Learn more")
             )
         );
     }
@@ -48541,7 +49176,7 @@ var Home = React.createClass({displayName: "Home",
 
 module.exports = Home;
 
-},{"react":197,"react-router":28}],208:[function(require,module,exports){
+},{"react":197,"react-router":28}],210:[function(require,module,exports){
 "use strict";
 
 var React = require('react');
@@ -48552,7 +49187,7 @@ var NotFoundPage = React.createClass({displayName: "NotFoundPage",
         return (
             React.createElement("div", null, 
                 React.createElement("h1", null, "Page Not Found"), 
-                React.createElement("p", null, "This is not the page you're looking for"), 
+                React.createElement("p", null, "Whoops! Nothing to see here..."), 
                 React.createElement("p", null, React.createElement(Link, {to: "app"}, "Back to Home"))
             )
         );
@@ -48561,7 +49196,7 @@ var NotFoundPage = React.createClass({displayName: "NotFoundPage",
 
 module.exports = NotFoundPage;
 
-},{"react":197,"react-router":28}],209:[function(require,module,exports){
+},{"react":197,"react-router":28}],211:[function(require,module,exports){
 "use strict";
 
 var React = require('react');
@@ -48572,7 +49207,7 @@ Router.run(routes, function(Handler) {
     React.render(React.createElement(Handler, null), document.getElementById('app'));
 });
 
-},{"./routes":210,"react":197,"react-router":28}],210:[function(require,module,exports){
+},{"./routes":212,"react":197,"react-router":28}],212:[function(require,module,exports){
 "use strict";
 
 var React = require('react');
@@ -48586,14 +49221,15 @@ var Redirect = Router.Redirect;
 var routes = (
     React.createElement(Route, {name: "app", path: "/", handler: require('./components/app')}, 
         React.createElement(DefaultRoute, {handler: require('./components/homePage')}), 
+        React.createElement(Route, {name: "authors", handler: require('./components/authors/authorPage')}), 
+        React.createElement(Route, {name: "addAuthor", path: "author", handler: require('./components/authors/manageAuthorPage.js')}), 
+        React.createElement(Route, {name: "about", handler: require('./components/about/aboutPage')}), 
         React.createElement(NotFoundRoute, {handler: require('./components/notFoundPage')}), 
-        React.createElement("route", {name: "authors", handler: require('./components/authors/authorPage')}), 
-        React.createElement("route", {name: "addAuthor", path: "author", handler: require('./components/authors/manageAuthorPage')}), 
-        React.createElement("route", {path: "/about-us", name: "about", handler: require('./components/about/aboutPage')}), 
-        React.createElement(Redirect, {from: "/about", to: "about"})
+        React.createElement(Redirect, {from: "about-us", to: "about"}), 
+        React.createElement(Redirect, {from: "about*", to: "about"})
     )
 );
 
 module.exports = routes;
 
-},{"./components/about/aboutPage":200,"./components/app":201,"./components/authors/authorPage":204,"./components/authors/manageAuthorPage":205,"./components/homePage":207,"./components/notFoundPage":208,"react":197,"react-router":28}]},{},[209]);
+},{"./components/about/aboutPage":201,"./components/app":202,"./components/authors/authorPage":205,"./components/authors/manageAuthorPage.js":206,"./components/homePage":209,"./components/notFoundPage":210,"react":197,"react-router":28}]},{},[211]);

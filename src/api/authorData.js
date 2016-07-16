@@ -1,4 +1,4 @@
-var authorData = {
+module.exports = {
     authors:
     [
         {
@@ -18,5 +18,3 @@ var authorData = {
         }
     ]
 };
-
-module.exports = authorData;

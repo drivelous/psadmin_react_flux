@@ -8,7 +8,7 @@ var NotFoundPage = React.createClass({
         return (
             <div>
                 <h1>Page Not Found</h1>
-                <p>This is not the page you're looking for</p>
+                <p>Whoops! Nothing to see here...</p>
                 <p><Link to="app">Back to Home</Link></p>
             </div>
         );

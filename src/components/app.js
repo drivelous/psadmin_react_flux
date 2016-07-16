@@ -1,8 +1,8 @@
-/*eslint-disable strict*/
+/*eslint-disable strict */ //Disable check because need jQuery global variable
 
 var React = require('react');
-var Header = require('./common/header');
 var RouteHandler = require('react-router').RouteHandler;
+var Header = require('./common/header');
 $ = jQuery = require('jquery');
 
 var App = React.createClass({
